@@ -1,9 +1,12 @@
 import numpy as np
 import scipy as sp
 import sklearn
+import math
+from itertools import permutations
 
 from matplotlib import pyplot as plt
 from sklearn import cluster
+from sklearn import metrics
 
 def kmeans_objective(data, means, clusters):
     k = len(means)
@@ -18,6 +21,20 @@ def clustering_accuracy(pred_labels, actual_labels, k):
             accuracies[ind1] += len(np.intersect1d(np.where(pred_labels == i[ind2]), np.where(actual_labels == j)))
     return np.max(accuracies)/n
 
+def get_max_f1(pred_labels, actual_labels, k):
+    f1_scores = np.zeros(math.factorial(k))
+    
+    def remap(entry, d):
+        return d[entry]
+
+    vremap = np.vectorize(remap)
+
+    for i, perm in enumerate(permutations(range(k))):    
+        d = dict(zip(range(k), perm))
+        tmp_pred_lables = vremap(pred_labels, d)
+        f1_scores[i] = metrics.f1_score(actual_labels, tmp_pred_lables, average='micro')
+    
+    return np.max(f1_scores)
 
 ## Furthest first traversal of dataset
 def fft(data, k):
