@@ -12,6 +12,26 @@ def kmeans_objective(data, means, clusters):
     k = len(means)
     return sum([np.sum(np.linalg.norm(data[np.where(clusters == i)] - means[i], axis=1)**2) for i in range(k)])
 
+def dunn_index(data, labels, means):
+    data_distances = metrics.pairwise.euclidean_distances(data)
+    
+    diam = [np.max(data_distances[np.where(labels==i)][:,np.where(labels==i)]) for i in range(k)]
+    cluster_distances[cluster_distances == 0] = np.nan
+    
+    return np.min(np.nanmin(cluster_distances, axis=0))/np.max(diam)
+
+def hubert_gamma(data, labels, means):
+    n = data.shape[0]
+    
+    data_distances = metrics.pairwise.euclidean_distances(data)
+    cluster_distances = metrics.pairwise.euclidean_distances(means)
+
+    gamma_sum = 0
+    for i in range(n):
+        for j in range(i, n):
+            gamma_sum += cluster_distances[labels[i],labels[j]] * data_distances[i,j] 
+            
+    return gamma_sum/(0.5*(n**2 - n))
 
 def clustering_accuracy(pred_labels, actual_labels, k):
     accuracies = np.zeros(math.factorial(k))
