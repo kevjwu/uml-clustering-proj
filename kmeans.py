@@ -59,9 +59,12 @@ def get_max_f1(pred_labels, actual_labels, k):
 ## Furthest first traversal of dataset
 def fft(data, k):
     i = 1
-
+    
     centers = [np.random.choice(data.shape[0])]
     noncenter_data = data
+    
+    D = metrics.pairwise.euclidean_distances(data)
+    
     while i < k: 
         dist=np.mean([D[j] for j in centers],0)
         for l in np.argsort(dist)[::-1]:
