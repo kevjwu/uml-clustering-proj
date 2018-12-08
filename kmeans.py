@@ -3,6 +3,9 @@ import scipy as sp
 import sklearn
 import math
 from itertools import permutations
+import matplotlib as mpl
+
+mpl.use('TkAgg')
 
 from matplotlib import pyplot as plt
 from sklearn import cluster
