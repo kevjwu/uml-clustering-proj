@@ -78,10 +78,15 @@ def fft(data, k):
     return data[centers]
 
 
-def hartigan_algorithm(data, k):
-    n = len(data)
+def hartigans(data, k, ordered_select=True, init=None):
 
-    partitions = np.random.choice(k, size=(n))
+    n = data.shape[0]
+
+    if init is None:
+        partitions = np.random.choice(k, size=(n))
+    else:
+        partitions = init
+        
     means = np.array([np.mean(data[np.where(partitions == i)], axis=0) for i in range(k)])
 
     sizes = np.bincount(partitions)
@@ -91,13 +96,23 @@ def hartigan_algorithm(data, k):
 
     while True:
         n_updates = 0
-        for j in range(n):
+        
+        if not ordered_select:
+            index_order = np.permutation(range(n))
+        else:
+            index_order = range(n)
+        
+        
+        for j in index_order:
             b = partitions[j]
-            phi_old = sizes[b]/(sizes[b] - 1) * np.sum((means[b] - data[j])**2)
+            if (sizes[b] - 1 == 0):
+                continue
+                
+            phi_old = sizes[b]/(sizes[b] - 1) * np.sum(np.square((means[b] - data[j])))
             costs = []
             for l in range(k):
                 if l != b:
-                    phi_new = sizes[l]/(sizes[l] + 1) * np.sum((means[l] - data[j])**2)
+                    phi_new = sizes[l]/(sizes[l] + 1) * np.sum(np.square((means[l] - data[j])))
                     costs.append((phi_old - phi_new,  l))
 
             (cost_new, l) = max(costs)
@@ -111,42 +126,41 @@ def hartigan_algorithm(data, k):
                 n_updates += 1
                 
         i += 1
-        print ('{}: {} changes'.format(i, n_updates))
+        #print ('{}: {} changes'.format(i, n_updates))
 
         if n_updates == 0:
             break
 
     return means, partitions
 
-
 ##### DATA GOES HERE
 ## Number of clusters
-K = 5
-## Labels: Length N numpy array of ground truth labels
-labels = []
-## Data: N x D array of data 
-data = np.zeros((N, d))
+# K = 5
+# ## Labels: Length N numpy array of ground truth labels
+# labels = []
+# ## Data: N x D array of data 
+# data = np.zeros((N, d))
 
-## Lloyd's with K-Means++ Initialization
-## set n_init = 1, otherwise default is to run 10 Lloyd's/kmeans++ 10 times and pick the best one
-kmeans_pp = cluster.KMeans(n_clusters=K, n_init=1).fit(data)
-kmeans_objective(data, kmeans_pp.cluster_centers_, kmeans_pp.labels_)
-clustering_accuracy(kmeans_pp.labels_, labels, K)
+# ## Lloyd's with K-Means++ Initialization
+# ## set n_init = 1, otherwise default is to run 10 Lloyd's/kmeans++ 10 times and pick the best one
+# kmeans_pp = cluster.KMeans(n_clusters=K, n_init=1).fit(data)
+# kmeans_objective(data, kmeans_pp.cluster_centers_, kmeans_pp.labels_)
+# clustering_accuracy(kmeans_pp.labels_, labels, K)
 
-## Lloyd's with FFT Initialization
-fft_init = fft(data, k)
-kmeans_fft = cluster.KMeans(n_clusters=K, init=fft_init).fit(data)
-kmeans_objective(data, kmeans_fft.cluster_centers_, kmeans_fft.labels_)
-clustering_accuracy(kmeans_fft.labels_, labels, K)
+# ## Lloyd's with FFT Initialization
+# fft_init = fft(data, k)
+# kmeans_fft = cluster.KMeans(n_clusters=K, init=fft_init).fit(data)
+# kmeans_objective(data, kmeans_fft.cluster_centers_, kmeans_fft.labels_)
+# clustering_accuracy(kmeans_fft.labels_, labels, K)
 
-## Lloyd's with Random Initialization
-kmeans_rand = cluster.KMeans(n_clusters=10, init='random', n_init=1).fit(data)
-kmeans_objective(data, kmeans_rand.cluster_centers_, kmeans_rand.labels_)
-clustering_accuracy(kmeans_rand.labels_, labels)
+# ## Lloyd's with Random Initialization
+# kmeans_rand = cluster.KMeans(n_clusters=10, init='random', n_init=1).fit(data)
+# kmeans_objective(data, kmeans_rand.cluster_centers_, kmeans_rand.labels_)
+# clustering_accuracy(kmeans_rand.labels_, labels)
 
-## Hartigan's Method
-hart_centers, hart_labels = hartigan_algorithm(data, K)
-kmeans_objective(data, hart_centers, hart_labels)
-clustering_accuracy(hart_labels, labels)
+# ## Hartigan's Method
+# hart_centers, hart_labels = hartigans(data, K)
+# kmeans_objective(data, hart_centers, hart_labels)
+# clustering_accuracy(hart_labels, labels)
 
 
